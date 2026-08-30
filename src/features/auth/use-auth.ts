@@ -2,13 +2,8 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { signIn, signInAs } from './demo-auth'
 import type { Role, SessionBranch, SessionRestaurant, SessionUser } from '@/types'
-
-interface AuthBundle {
-  user: SessionUser
-  restaurant: SessionRestaurant
-  branches: SessionBranch[]
-}
 
 interface AuthState {
   user: SessionUser | null
@@ -21,17 +16,6 @@ interface AuthState {
   setHydrated: () => void
 }
 
-async function postLogin(payload: Record<string, unknown>): Promise<AuthBundle> {
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  const data = await res.json()
-  if (!res.ok) throw new Error(data?.error || 'Could not sign in')
-  return data as AuthBundle
-}
-
 export const useAuth = create<AuthState>()(
   persist(
     (set) => ({
@@ -40,12 +24,12 @@ export const useAuth = create<AuthState>()(
       branches: [],
       hydrated: false,
       async login(email, password, role) {
-        const bundle = await postLogin({ email, password, role })
+        const bundle = await signIn(email, password, role)
         set({ user: bundle.user, restaurant: bundle.restaurant, branches: bundle.branches })
         return bundle.user
       },
       async loginAs(role) {
-        const bundle = await postLogin({ role, switch: true })
+        const bundle = await signInAs(role)
         set({ user: bundle.user, restaurant: bundle.restaurant, branches: bundle.branches })
         return bundle.user
       },
