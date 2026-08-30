@@ -1,14 +1,16 @@
 // Hostly database — users and the restaurant they belong to.
-// SQLite keeps it zero-infra for local dev; swap the datasource + provider
-// (e.g. to postgresql) and the same schema/queries work against a real server.
+// Postgres, hosted on Supabase. DATABASE_URL goes through the transaction-mode
+// pooler (pgbouncer) for the app; DIRECT_URL uses the session-mode pooler so
+// migrations and `db push` can run DDL.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Restaurant {
