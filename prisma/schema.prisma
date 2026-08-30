@@ -1,0 +1,49 @@
+// Hostly database — users and the restaurant they belong to.
+// SQLite keeps it zero-infra for local dev; swap the datasource + provider
+// (e.g. to postgresql) and the same schema/queries work against a real server.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id        String   @id @default(cuid())
+  name      String
+  tagline   String?
+  email     String
+  phone     String?
+  gst       Float    @default(5)
+  service   Float    @default(10)
+  createdAt DateTime @default(now())
+
+  branches Branch[]
+  users    User[]
+}
+
+model Branch {
+  id           String     @id @default(cuid())
+  name         String
+  meta         String
+  isMain       Boolean    @default(false)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  // One of: Owner | Manager | Cashier | Kitchen Supervisor (matches the app Role union)
+  role         String
+  status       String     @default("Active")
+  lastActiveAt DateTime   @default(now())
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String
+  createdAt    DateTime   @default(now())
+}
